@@ -1,0 +1,13 @@
+use_frameworks!
+
+platform :ios, '9.0'
+
+target 'XXSocketReqeust_Example' do
+  pod 'XXSocketReqeust', :path => '../'
+
+  target 'XXSocketReqeust_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
