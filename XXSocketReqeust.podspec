@@ -8,8 +8,8 @@
 
 Pod::Spec.new do |s|
   s.name             = 'XXSocketReqeust'
-  s.version          = '0.1.0'
-  s.summary          = 'A short description of XXSocketReqeust.'
+  s.version          = '1.0.0'
+  s.summary          = '无视当前路由，强制通过蜂窝网络或WiFi进行HTTP请求。'
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
@@ -31,12 +31,9 @@ TODO: Add long description of the pod here.
   s.ios.deployment_target = '9.0'
 
   s.source_files = 'XXSocketReqeust/Classes/**/*'
-  
-  # s.resource_bundles = {
-  #   'XXSocketReqeust' => ['XXSocketReqeust/Assets/*.png']
-  # }
-
-  # s.public_header_files = 'Pod/Classes/**/*.h'
+  s.public_header_files = 'Pod/Classes/**/XXSocketRequestManager.h'
   # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
+  s.dependency 'AFNetworking', '~> 4.0'
+  s.dependency 'CocoaAsyncSocket', '~> 7.6.5'
+  
 end

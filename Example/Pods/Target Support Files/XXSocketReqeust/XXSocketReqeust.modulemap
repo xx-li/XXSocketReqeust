@@ -1,0 +1,6 @@
+framework module XXSocketReqeust {
+  umbrella header "XXSocketReqeust-umbrella.h"
+
+  export *
+  module * { export * }
+}
