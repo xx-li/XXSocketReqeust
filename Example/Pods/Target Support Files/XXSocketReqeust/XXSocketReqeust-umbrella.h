@@ -10,10 +10,8 @@
 #endif
 #endif
 
-#import "http_parser.h"
-#import "NSData+XXSocketReqeust.h"
-#import "XXSocketDataTask.h"
 #import "XXSocketRequestManager.h"
+#import "XXSocketDataTask.h"
 
 FOUNDATION_EXPORT double XXSocketReqeustVersionNumber;
 FOUNDATION_EXPORT const unsigned char XXSocketReqeustVersionString[];
