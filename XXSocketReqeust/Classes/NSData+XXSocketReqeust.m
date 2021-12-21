@@ -9,8 +9,7 @@
 
 @implementation NSData (XXSocketReqeust)
 
-+ (NSData *)httpRequestDataFormatWithRequest:(NSURLRequest *)request
-{
++ (NSData *)httpRequestDataFormatWithRequest:(NSURLRequest *)request {
     NSMutableString * requestStrFrmt = [NSMutableString string];
     NSURL * url = request.URL;
     

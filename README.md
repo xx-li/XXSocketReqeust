@@ -35,7 +35,7 @@
 ```
 
 ## Requirements
-依赖第三方框架`AFNetworking`和`CocoaAsyncSocket`
+依赖第三方框架`AFNetworking`和`CocoaAsyncSocket`。另外依赖于`nodejs`的http解析框架[http-parser](https://github.com/nodejs/http-parser)，这个框架不提供pod支持，所以以源码的方式进行引用。
 
 ## Installation
 

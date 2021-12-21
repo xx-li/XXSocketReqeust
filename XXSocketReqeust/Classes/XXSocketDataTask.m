@@ -117,8 +117,7 @@ static http_parser_settings settings =
 @implementation XXSocketDataTask
 @synthesize response = _response;
 
-- (instancetype)initWithRequest:(NSURLRequest *)request viaInterface:(XXNetworkInterface)interface
-{
+- (instancetype)initWithRequest:(NSURLRequest *)request viaInterface:(XXNetworkInterface)interface {
     self = [super init];
     if (self) {
         _request = request;
@@ -129,8 +128,7 @@ static http_parser_settings settings =
 }
 
 #pragma mark -
-- (void) completeWithError:(NSError *)error
-{
+- (void) completeWithError:(NSError *)error {
     //避免重复回调
     if (_state == XXSocketTaskStateCompleted) {
         return;
@@ -153,8 +151,7 @@ static http_parser_settings settings =
 }
 
 /*! 成功返回0， 失败返回-1 */
-- (int)httpParserParserHeaderComplte
-{
+- (int)httpParserParserHeaderComplte {
     NSMutableDictionary * allHeaderFields = [NSMutableDictionary dictionary];
     NSArray * allInfos = [self.allHeaderFieldInfos copy];
     if (allInfos.count < 2) {
@@ -184,8 +181,7 @@ static http_parser_settings settings =
 
 
 #pragma mark - Public method
-- (void)start
-{
+- (void)start {
     //只能执行一次
     if (_asyncSocket) {
         return;
@@ -235,53 +231,15 @@ static http_parser_settings settings =
 }
 
 
-- (void)cancel
-{
+- (void)cancel {
     _state = XXSocketTaskStateCanceling;
     [_asyncSocket disconnect];
     _asyncSocket = nil;
 }
 
-#pragma mark - Tool
-
-- (uint16_t)socketPortWithURL:(NSURL *)URL
-{
-    uint16_t port = [URL.port unsignedIntValue];;
-    if (port == 0) {
-        if ([URL.scheme isEqualToString:@"http"]) {
-            port = 80;
-        }
-        else if ([URL.scheme isEqualToString:@"https"]) {
-            port = 443;
-        }
-        else {
-            NSString * msg = [NSString stringWithFormat:@"错误的scheme%@ url:%@", URL.scheme, URL];
-            NSError * error = [NSError errorWithDomain:XXSocketDataTaskDomain code:0 userInfo:@{NSLocalizedDescriptionKey : msg}];
-            [self completeWithError:error];
-            NSLog(@"%@", msg);
-        }
-    }
-    return port;
-}
-
-- (NSString *)ifaNameWithType:(XXNetworkInterface)interface {
-    if (interface == XXNetworkInterfaceWiFi) {
-        return @"en0";
-    } else if (interface == XXNetworkInterfaceCellular) {
-        return @"pdp_ip0";
-    } else {
-        NSString * msg = [NSString stringWithFormat:@"错误的XXNetworkInterface类型：%@", @(interface)];
-        NSError * error = [NSError errorWithDomain:XXSocketDataTaskDomain code:0 userInfo:@{NSLocalizedDescriptionKey : msg}];
-        [self completeWithError:error];
-        NSLog(@"%@", msg);
-        return nil;
-    }
-}
-
 
 #pragma mark - GCDAsyncSocketDelegate
-- (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(UInt16)port
-{
+- (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(UInt16)port {
     NSData * requestData = [NSData httpRequestDataFormatWithRequest:_request];
     [_asyncSocket writeData:requestData withTimeout:-1.0 tag:0];
     
@@ -289,8 +247,7 @@ static http_parser_settings settings =
     [_asyncSocket readDataToData:responseTerminatorData withTimeout:-1.0 tag:0];
 }
 
-- (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
-{
+- (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag {
 //    NSString *httpResponse = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 //    NSLog(@"socket:didReadData:withTag:\n%@", httpResponse);
     
@@ -334,8 +291,7 @@ static http_parser_settings settings =
     _parser = NULL;
 }
 
-- (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err
-{
+- (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err {
     if (err && _state != XXSocketTaskStateCompleted) {
         [self completeWithError:err];
     }
@@ -344,8 +300,7 @@ static http_parser_settings settings =
     }
 }
 
-- (void)socket:(GCDAsyncSocket *)sock didReceiveTrust:(SecTrustRef)trust completionHandler:(void (^)(BOOL shouldTrustPeer))completionHandler
-{
+- (void)socket:(GCDAsyncSocket *)sock didReceiveTrust:(SecTrustRef)trust completionHandler:(void (^)(BOOL shouldTrustPeer))completionHandler {
     dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     dispatch_async(bgQueue, ^{
         
@@ -372,8 +327,41 @@ static http_parser_settings settings =
 }
 
 #pragma mark - tool
-- (BOOL)validIsIP:(NSString *)str
-{
+
+- (uint16_t)socketPortWithURL:(NSURL *)URL {
+    uint16_t port = [URL.port unsignedIntValue];;
+    if (port == 0) {
+        if ([URL.scheme isEqualToString:@"http"]) {
+            port = 80;
+        }
+        else if ([URL.scheme isEqualToString:@"https"]) {
+            port = 443;
+        }
+        else {
+            NSString * msg = [NSString stringWithFormat:@"错误的scheme%@ url:%@", URL.scheme, URL];
+            NSError * error = [NSError errorWithDomain:XXSocketDataTaskDomain code:0 userInfo:@{NSLocalizedDescriptionKey : msg}];
+            [self completeWithError:error];
+            NSLog(@"%@", msg);
+        }
+    }
+    return port;
+}
+
+- (NSString *)ifaNameWithType:(XXNetworkInterface)interface {
+    if (interface == XXNetworkInterfaceWiFi) {
+        return @"en0";
+    } else if (interface == XXNetworkInterfaceCellular) {
+        return @"pdp_ip0";
+    } else {
+        NSString * msg = [NSString stringWithFormat:@"错误的XXNetworkInterface类型：%@", @(interface)];
+        NSError * error = [NSError errorWithDomain:XXSocketDataTaskDomain code:0 userInfo:@{NSLocalizedDescriptionKey : msg}];
+        [self completeWithError:error];
+        NSLog(@"%@", msg);
+        return nil;
+    }
+}
+
+- (BOOL)validIsIP:(NSString *)str {
     if (!str) {
         return NO;
     }

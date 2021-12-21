@@ -65,8 +65,7 @@ typedef  void (^XXSocketDataTaskCompletionHandler)(NSURLResponse *response, id _
     _task.delegate = self;
 }
 
-- (void)socketTask:(XXSocketDataTask *)task didCompleteWithError:(nullable NSError *)error
-{
+- (void)socketTask:(XXSocketDataTask *)task didCompleteWithError:(nullable NSError *)error {
     __strong XXSocketRequestManager *manager = self.manager;
     __block id responseObject = nil;
     dispatch_queue_t queue = task.completeQueue ?: dispatch_get_main_queue();
@@ -98,8 +97,7 @@ typedef  void (^XXSocketDataTaskCompletionHandler)(NSURLResponse *response, id _
 
 @implementation XXSocketRequestManager
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         _requestSerializer = [AFHTTPRequestSerializer serializer];
@@ -113,8 +111,7 @@ typedef  void (^XXSocketDataTaskCompletionHandler)(NSURLResponse *response, id _
 
 - (nullable XXSocketDataTask *)dataTaskWithRequest:(NSURLRequest *)request
                                         viaInterface:(XXNetworkInterface)interface
-                                   completionHandler:(nullable XXSocketDataTaskCompletionHandler)completionHandler
-{
+                                   completionHandler:(nullable XXSocketDataTaskCompletionHandler)completionHandler {
     XXSocketDataTask *task = [[XXSocketDataTask alloc] initWithRequest:request viaInterface:interface];
     [self addDelegateForDataTask:task completionHandler:completionHandler];
     
@@ -122,8 +119,7 @@ typedef  void (^XXSocketDataTaskCompletionHandler)(NSURLResponse *response, id _
 }
 
 - (void)addDelegateForDataTask:(XXSocketDataTask *)dataTask
-             completionHandler:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionHandler
-{
+             completionHandler:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionHandler {
     XXSocketManagerTaskDelegate *delegate = [[XXSocketManagerTaskDelegate alloc] init];
     delegate.task = dataTask;
     delegate.manager = self;
@@ -145,8 +141,7 @@ typedef  void (^XXSocketDataTaskCompletionHandler)(NSURLResponse *response, id _
 }
 
 - (void)setDelegate:(XXSocketManagerTaskDelegate *)delegate
-            forTask:(XXSocketDataTask *)task
-{
+            forTask:(XXSocketDataTask *)task {
     NSParameterAssert(task);
     NSParameterAssert(delegate);
     
