@@ -30,7 +30,7 @@ TODO: Add long description of the pod here.
   s.ios.deployment_target = '9.0'
 
   s.source_files = 'XXSocketReqeust/Classes/**/*'
-  s.public_header_files = 'Pod/Classes/**/XXSocketRequestManager.h'
+  s.public_header_files = 'XXSocketReqeust/Classes/XXSocketRequestManager.h'
   # s.frameworks = 'UIKit', 'MapKit'
   s.dependency 'AFNetworking', '~> 4.0'
   s.dependency 'CocoaAsyncSocket', '~> 7.6.5'
