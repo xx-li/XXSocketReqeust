@@ -247,6 +247,9 @@
 				LastUpgradeCheck = 1320;
 				ORGANIZATIONNAME = lixinxing;
 				TargetAttributes = {
+					6003F589195388D20070C39A = {
+						DevelopmentTeam = PGLR8SXPQP;
+					};
 					6003F5AD195388D20070C39A = {
 						TestTargetID = 6003F589195388D20070C39A;
 					};
@@ -528,6 +531,7 @@
 			baseConfigurationReference = B1012E9C5B69905748708339 /* Pods-XXSocketReqeust_Example.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = PGLR8SXPQP;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "XXSocketReqeust/XXSocketReqeust-Prefix.pch";
 				INFOPLIST_FILE = "XXSocketReqeust/XXSocketReqeust-Info.plist";
@@ -544,6 +548,7 @@
 			baseConfigurationReference = 337E0CDA9E3DDA479DBB19CB /* Pods-XXSocketReqeust_Example.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = PGLR8SXPQP;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "XXSocketReqeust/XXSocketReqeust-Prefix.pch";
 				INFOPLIST_FILE = "XXSocketReqeust/XXSocketReqeust-Info.plist";

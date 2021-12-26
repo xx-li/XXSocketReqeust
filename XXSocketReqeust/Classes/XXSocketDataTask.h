@@ -42,7 +42,7 @@ typedef NS_ENUM(NSInteger, XXSocketTaskState) {
 /// 对Http请求的Socket封装。
 ///
 /// 内部会对NSURLRequest进行解析，组装成符合http协议格式的二进制数据。
-/// 通过CocoaAsyncSocket框架，在socket层绑定特定网卡（蜂窝网络或Wi-Fi）
+/// 通过CocoaAsyncSocket框架，在socket层绑定特定网络接口（蜂窝网络或Wi-Fi）
 /// 将http request格式的二进制数据发送至服务器。
 /// 收到服务端返回的二进制数据后，使用node.js的http解析（c语言）框架http_parser解析出http response。
 @interface XXSocketDataTask : NSObject
@@ -51,7 +51,7 @@ typedef NS_ENUM(NSInteger, XXSocketTaskState) {
 
 @property (readonly, copy) NSURLRequest  *request;
 
-/// 请求绑定的网卡
+/// 请求绑定的网络接口
 @property (readonly) XXNetworkInterface interface;
 
 @property (readonly) XXSocketTaskState state;

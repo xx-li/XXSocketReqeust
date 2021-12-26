@@ -21,6 +21,22 @@
 
 
 #define XXSocketDataTaskDomain @"XXSocketDataTaskDomain"
+#define XX_HTTP_HEADER 100
+#define XXSocketLogOpen 1
+
+void XXSocketLog(NSString *format, ...) {
+#ifdef DEBUG
+    //调试的时候打开
+    if (XXSocketLogOpen == 0) {
+        return;
+    }
+    va_list argptr;
+    va_start(argptr, format);
+    NSLogv([NSString stringWithFormat:@"[XX]%@", format], argptr);
+    va_end(argptr);
+#endif
+}
+
 
 #pragma mark -
 
@@ -35,8 +51,6 @@
 @property (strong, nonatomic) GCDAsyncSocket * asyncSocket;
 @property (strong, nonatomic) NSMutableData * responseData;
 
-@property (assign) BOOL isNewParserWithBody;
-@property (assign) BOOL isNewParserWithHeader;
 @property (assign) BOOL isParserSuccess;
 @property (strong) NSMutableArray * allHeaderFieldInfos;
 
@@ -52,9 +66,8 @@ body_cb (http_parser *p, const char *buf, size_t len)
 {
     XXSocketDataTask * task = (__bridge XXSocketDataTask *)p->data;
     //会用多个http_parser解析，http_parser解析会回调多次，所以最后一次创建的解析器的数据才是最终的数据。
-    if (task.isNewParserWithBody) {
+    if (task.body == nil) {
         task.body = [NSMutableData data];
-        task.isNewParserWithBody = NO;
     }
     [task.body appendBytes:buf length:len];
     return 0;
@@ -67,9 +80,8 @@ on_header_field_cb (http_parser *p, const char *buf, size_t len)
     NSString * field = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     
     XXSocketDataTask * task = (__bridge XXSocketDataTask *)p->data;
-    if (task.isNewParserWithHeader) {
+    if (task.allHeaderFieldInfos == nil) {
         task.allHeaderFieldInfos = [NSMutableArray array];
-        task.isNewParserWithHeader = NO;
     }
     
     [task.allHeaderFieldInfos addObject:field];
@@ -97,10 +109,9 @@ headers_complete_cb (http_parser *p)
 int
 message_complete_cb (http_parser *p)
 {
+    XXSocketLog(@"http_parser 解析全部完成");
     XXSocketDataTask * task = (__bridge XXSocketDataTask *)p->data;
     [task completeWithError:nil];
-//    NSString * body = [[NSString alloc] initWithData:task.body encoding:NSUTF8StringEncoding];
-    NSLog(@"message_complete_cb");
     return 0;
 }
 
@@ -128,7 +139,9 @@ static http_parser_settings settings =
 }
 
 #pragma mark -
-- (void) completeWithError:(NSError *)error {
+- (void)completeWithError:(NSError *)error {
+    XXSocketLog(@"completeWithError error:%@", error);
+//    XXSocketLog(@"%@, error:%@", "__func__", "error");
     //避免重复回调
     if (_state == XXSocketTaskStateCompleted) {
         return;
@@ -171,11 +184,11 @@ static http_parser_settings settings =
     
     _response = [[NSHTTPURLResponse alloc] initWithURL:self.request.URL statusCode:statusCode HTTPVersion:nil headerFields:allHeaderFields];
     
+    XXSocketLog(@"head解析完成，allHeaderFields: %@", allHeaderFields);
+
     if ([_request.HTTPMethod isEqualToString:@"HEAD"]) {
         [self completeWithError:nil];
     }
-    
-//    NSLog(@"allHeaderFields: %@", allHeaderFields);
     return 0;
 }
 
@@ -211,12 +224,12 @@ static http_parser_settings settings =
                                 withTimeout:_request.timeoutInterval
                                       error:&error];
     if (!flag){
-        NSLog(@"Unable to connect to due to invalid configuration: %@", error);
+        XXSocketLog(@"Unable to connect to due to invalid configuration: %@", error);
         [self completeWithError:error];
         return;
     }
     else{
-        NSLog(@"Connecting to \"%@\" on port %hu...", host, port);
+        XXSocketLog(@"Connecting to \"%@\" on port %hu...", host, port);
     }
     
     //https请求的支持
@@ -243,31 +256,33 @@ static http_parser_settings settings =
     NSData * requestData = [NSData httpRequestDataFormatWithRequest:_request];
     [_asyncSocket writeData:requestData withTimeout:-1.0 tag:0];
     
+    // http请求response的响应头以两个CRLF结尾
     NSData *responseTerminatorData = [@"\r\n\r\n" dataUsingEncoding:NSASCIIStringEncoding];
-    [_asyncSocket readDataToData:responseTerminatorData withTimeout:-1.0 tag:0];
+    [_asyncSocket readDataToData:responseTerminatorData withTimeout:-1.0 tag:XX_HTTP_HEADER];
 }
 
 - (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag {
-//    NSString *httpResponse = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-//    NSLog(@"socket:didReadData:withTag:\n%@", httpResponse);
+    NSString *httpResponse = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    XXSocketLog(@"socket:didReadData:withTag:\n%@", httpResponse);
     
     if (!_responseData) {
         _responseData = [NSMutableData data];
     }
-    
     [_responseData appendData:data];
     
+    // 只获取到response的header，数据并不完整，先不解析，继续读取数据。
+    if (tag == XX_HTTP_HEADER) {
+        [_asyncSocket readDataWithTimeout:-1.0 tag:0];
+        return;
+    }
+    
     //无法判断请求数据已经接收完成，只能每次收到数据都进行解析
-    _isNewParserWithBody = YES;
-    _isNewParserWithHeader = YES;
     _parser = malloc(sizeof(http_parser));
     http_parser_init(_parser, HTTP_RESPONSE);
     _parser->data = (__bridge void *)(self);
 
     size_t parsed;
     parsed = http_parser_execute(_parser, &settings, _responseData.bytes, _responseData.length);
-    
-    
     if (data == nil) {
         NSError * error = [NSError errorWithDomain:XXSocketDataTaskDomain code:0 userInfo:@{NSLocalizedDescriptionKey : @"didReadData 返回空数据"}];
         [self completeWithError:error];
@@ -296,7 +311,7 @@ static http_parser_settings settings =
         [self completeWithError:err];
     }
     else {
-        NSLog(@"socketDidDisconnect:withError: \"%@\"", err);
+        XXSocketLog(@"socketDidDisconnect:withError: \"%@\"", err);
     }
 }
 
@@ -341,7 +356,7 @@ static http_parser_settings settings =
             NSString * msg = [NSString stringWithFormat:@"错误的scheme%@ url:%@", URL.scheme, URL];
             NSError * error = [NSError errorWithDomain:XXSocketDataTaskDomain code:0 userInfo:@{NSLocalizedDescriptionKey : msg}];
             [self completeWithError:error];
-            NSLog(@"%@", msg);
+            XXSocketLog(@"%@", msg);
         }
     }
     return port;
@@ -356,7 +371,7 @@ static http_parser_settings settings =
         NSString * msg = [NSString stringWithFormat:@"错误的XXNetworkInterface类型：%@", @(interface)];
         NSError * error = [NSError errorWithDomain:XXSocketDataTaskDomain code:0 userInfo:@{NSLocalizedDescriptionKey : msg}];
         [self completeWithError:error];
-        NSLog(@"%@", msg);
+        XXSocketLog(@"%@", msg);
         return nil;
     }
 }
